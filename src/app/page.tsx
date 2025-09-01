@@ -4,10 +4,9 @@ import { Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Instrument_Serif } from "next/font/google";
 import { ChangeEvent, useRef, useState } from "react";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import GradientBackground from "@/components/background";
-import Link from "next/link";
+import Image from "next/image";
 
 const font = Instrument_Serif({
   subsets: ["latin"],
@@ -72,7 +71,7 @@ export default function Home() {
             Upload a Picture of You
           </h2>
           <input type="file" ref={modelRef} accept="image/*" onChange={handleImageChange} className="hidden"/>
-        </div>):<img className=" h-48 w-4h-48 md:h-96  md:w-96 rounded-md mx-auto" src={URL.createObjectURL(modelImage)}></img>}
+        </div>):<Image className=" h-48 w-4h-48 md:h-96  md:w-96 rounded-md mx-auto" src={URL.createObjectURL(modelImage)} alt="Selected model photo" width={384} height={384} unoptimized />}
 
         {!clothImage?(<div onClick={()=>{clothRef.current?.click()}} className="bg-muted-foreground/20 h-48 w-4h-48 md:h-96  md:w-96 rounded-md flex flex-col items-center justify-center p-10">
           <Upload size={50} className="text-muted-foreground"/>
@@ -80,14 +79,14 @@ export default function Home() {
             Upload a Picture of the cloths you want to try
           </h2>
           <input type="file" ref={clothRef} accept="image/*" onChange={handleClothChange} className="hidden"/>
-        </div>):<img className=" h-48 w-4h-48 md:h-96  md:w-96 rounded-md mx-auto" src={URL.createObjectURL(clothImage)}></img>}
+        </div>):<Image className=" h-48 w-4h-48 md:h-96  md:w-96 rounded-md mx-auto" src={URL.createObjectURL(clothImage)} alt="Selected garment photo" width={384} height={384} unoptimized />}
       </div>
 
       <div className="flex items-center p-5 w-full md:w-2/3 gap-2 text-xs">
         <Input placeholder="Enter any additional details (optional)" value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="text-sm bg-white/80 dark:bg-black/50"/>
          <Button onClick={handleClick} className="text-xs"> {!loading?"Try on !":<Loader2 className="animate-spin"/>}</Button>
       </div>
-      {resultImage&&<img src={`${resultImage}`} className="w-96 rounded-xl"/>}
+      {resultImage&&<Image src={`${resultImage}`} alt="Generated try-on result" width={384} height={384} className="w-96 rounded-xl" unoptimized />}
       <GradientBackground/>
       </div>
   );

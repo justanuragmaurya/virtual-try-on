@@ -15,11 +15,17 @@ export async function POST(req: NextRequest) {
         })
     }
 
-    const user = await prisma.user.findFirst({where:{
-        id:session.user?.id
-    }})
+    const sessionUserId = session.user?.id
+    if (!sessionUserId) {
+      return NextResponse.json({
+        success: false,
+        message: "Not Logged in , please login to continue"
+      })
+    }
+
+    const user = await prisma.user.findFirst({ where: { id: sessionUserId } })
     if(user){
-        if(user?.credits! <= 0){
+        if(user.credits <= 0){
             return NextResponse.json({
                 success:false,
                 message:"Not Enough Credits"
@@ -31,7 +37,6 @@ export async function POST(req: NextRequest) {
             message:"Not Logged in , please login to continue"
         })
     }
-    
 
     const form = await req.formData();
     const userPrompt = form.get("userPrompt");
@@ -79,16 +84,16 @@ export async function POST(req: NextRequest) {
     await prisma.images.create({
         data:{
             link:result.data.images[0].url,
-            creatorId:session.user?.id!
+            creatorId: sessionUserId
         }
     })
     
     await prisma.user.update({
         where:{
-            id:session.user?.id!
+            id: sessionUserId
         },
         data:{
-            credits:user?.credits!-1
+            credits: user.credits - 1
         }
     })
 
@@ -98,11 +103,12 @@ export async function POST(req: NextRequest) {
       success: true,
       data: result.data.images[0].url,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err);
     prisma.$disconnect()
+    const message = err instanceof Error ? err.message : "Internal error"
     return NextResponse.json(
-      { success: false, error: err?.message ?? "Internal error" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
