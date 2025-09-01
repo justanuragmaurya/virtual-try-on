@@ -10,7 +10,7 @@ const mont = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: "Try It On",
+  title: "FitCheck",
   description: "made by anurag - > anuragmaurya.com",
 };
 

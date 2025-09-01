@@ -57,7 +57,7 @@ export default function Home() {
   return (
     <div className="max-w-5xl mx-auto flex flex-col items-center text-center p-2">
       <div className="w-full md:max-w-1/2 p-5 mt-5 md:mt-24">
-        <h1 className={`text-5xl ${font.className}`}>Try It On</h1>
+        <h1 className={`text-5xl ${font.className}`}>Fit<span className="text-blue-400">Check</span></h1>
         <p className="mx-auto text-sm">
           Upload a image of your and a image of cloths you want to try on and
           hit the Try button and see the magic on screen
