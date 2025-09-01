@@ -1,0 +1,109 @@
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { system_prompt } from "@/lib/utils";
+import { fal } from "@fal-ai/client";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await auth()
+
+    if(!session){
+        return NextResponse.json({
+            success:false,
+            message:"Not Logged in , please login to continue"
+        })
+    }
+
+    const user = await prisma.user.findFirst({where:{
+        id:session.user?.id
+    }})
+    if(user){
+        if(user?.credits! <= 0){
+            return NextResponse.json({
+                success:false,
+                message:"Not Enough Credits"
+            })
+        }
+    }else{
+        return NextResponse.json({
+            success:false,
+            message:"Not Logged in , please login to continue"
+        })
+    }
+    
+
+    const form = await req.formData();
+    const userPrompt = form.get("userPrompt");
+    const modelImage = form.get("modelImage");
+    const clothImage = form.get("clothImage");
+
+    if (!(modelImage instanceof File) || !(clothImage instanceof File)) {
+      return NextResponse.json(
+        { success: false, error: "Missing files" },
+        { status: 400 }
+      );
+    }
+
+    fal.config({ credentials: process.env.FAL_API_KEY });
+
+    console.log("Uploading images");
+    const uploadedModel = await fal.storage.upload(modelImage);
+    const uploadedGarment = await fal.storage.upload(clothImage);
+    console.log(`uploaded files ${uploadedModel} and ${uploadedGarment}`);
+
+    let final_prompt = system_prompt;
+    if (userPrompt) {
+      final_prompt =
+        system_prompt +
+        "Here are some other requiremnets from the user , keep these in mind too: " +
+        userPrompt;
+    }
+
+    console.log("Generating Images with the prompt " + final_prompt);
+    const result = await fal.subscribe("fal-ai/nano-banana/edit", {
+      input: {
+        prompt: final_prompt,
+        image_urls: [uploadedModel, uploadedGarment],
+      },
+      logs: true,
+      onQueueUpdate: (update) => {
+        if (update.status === "IN_PROGRESS") {
+          update.logs.map((log) => log.message).forEach(console.log);
+        }
+      },
+    });
+
+    console.log("done");
+
+    await prisma.images.create({
+        data:{
+            link:result.data.images[0].url,
+            creatorId:session.user?.id!
+        }
+    })
+    
+    await prisma.user.update({
+        where:{
+            id:session.user?.id!
+        },
+        data:{
+            credits:user?.credits!-1
+        }
+    })
+
+    prisma.$disconnect()
+
+    return NextResponse.json({
+      success: true,
+      data: result.data.images[0].url,
+    });
+  } catch (err: any) {
+    console.error(err);
+    prisma.$disconnect()
+    return NextResponse.json(
+      { success: false, error: err?.message ?? "Internal error" },
+      { status: 500 }
+    );
+  }
+}
