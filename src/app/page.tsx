@@ -41,7 +41,7 @@ export default function Home() {
     formData.append("modelImage", modelImage);
     formData.append("clothImage", clothImage);
     const prompt = inputRef.current?.value?.trim();
-    if (prompt?.length!=0) {
+    if (prompt) {
       formData.append("userPrompt", prompt);
     }
 
