@@ -21,7 +21,8 @@ export default async function Header() {
           </Link>
         </div>
         <div className="flex items-center gap-2">
-            <AuthButtons session={session}/>
+          {session&&<Link href={"/images"} className="text-xs px-5">My Images</Link>}
+          <AuthButtons session={session}/>
           <ModeToggle />
         </div>
       </div>

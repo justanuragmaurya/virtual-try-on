@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/providers";
 import Header from "@/components/header";
 import { Analytics } from "@vercel/analytics/next"
+import NextTopLoader from 'nextjs-toploader';
 
 const mont = Montserrat({
   subsets: ["latin"],
@@ -26,6 +27,7 @@ export default function RootLayout({
         className={`${mont.className}`}
       >
         <Providers>
+          <NextTopLoader />
           <Header/>
           {children}
           <Analytics/>
