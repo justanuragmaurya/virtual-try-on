@@ -16,13 +16,13 @@ const font = Instrument_Serif({
 export default function Home() {
   const [modelImage , setModel] = useState<File>();
   const [clothImage , setCloth] = useState<File>();
-  const [prompt,setPrompt] = useState<string>("");
   const [loading,setLoading]= useState<boolean>(false);
 
   const [resultImage , setResult ] = useState<string>();
   
   const modelRef = useRef<HTMLInputElement>(null)
   const clothRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return
@@ -36,11 +36,14 @@ export default function Home() {
 
   const handleClick = async()=>{
     setLoading(true)
-    if (!modelImage || !clothImage) return;
+    if (!modelImage || !clothImage) { setLoading(false); return; }
     const formData = new FormData();
     formData.append("modelImage", modelImage);
     formData.append("clothImage", clothImage);
-    if (prompt) formData.append("userPrompt", prompt);
+    const prompt = inputRef.current?.value?.trim();
+    if (prompt?.length!=0) {
+      formData.append("userPrompt", prompt);
+    }
 
     const response = await axios.post("/api/try", formData, {
       headers: { "Content-Type": "multipart/form-data" }
@@ -83,8 +86,8 @@ export default function Home() {
       </div>
 
       <div className="flex items-center p-5 w-full md:w-2/3 gap-2 text-xs">
-        <Input placeholder="Enter any additional details (optional)" value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="text-sm bg-white/80 dark:bg-black/50"/>
-         <Button onClick={handleClick} className="text-xs"> {!loading?"Try on !":<Loader2 className="animate-spin"/>}</Button>
+        <Input ref={inputRef} placeholder="Enter any additional details (optional)" className="text-sm bg-white/80 dark:bg-black/50"/>
+         <Button onClick={handleClick} disabled={loading} className="text-xs"> {!loading?"Try on !":<Loader2 className="animate-spin"/>}</Button>
       </div>
       {resultImage&&<Image src={`${resultImage}`} alt="Generated try-on result" width={384} height={384} className="w-96 rounded-xl" unoptimized />}
       <GradientBackground/>
