@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("Generating Images with the prompt " + final_prompt);
-    const result = await fal.subscribe("fal-ai/nano-banana/edit", {
+    const result = await fal.subscribe("fal-ai/bytedance/seedream/v4/edit", {
       input: {
         prompt: final_prompt,
         image_urls: [uploadedModel, uploadedGarment],
