@@ -40,12 +40,12 @@ export async function POST(req: NextRequest) {
 
     const form = await req.formData();
     const userPrompt = form.get("userPrompt");
-    const modelImage = form.get("modelImage");
-    const clothImage = form.get("clothImage");
+    const images = form.getAll("images");
+    const imageFiles = images.filter((v): v is File => v instanceof File);
 
-    if (!(modelImage instanceof File) || !(clothImage instanceof File)) {
+    if (imageFiles.length < 2) {
       return NextResponse.json(
-        { success: false, error: "Missing files" },
+        { success: false, message: "Please upload at least 2 images" },
         { status: 400 }
       );
     }
@@ -53,9 +53,10 @@ export async function POST(req: NextRequest) {
     fal.config({ credentials: process.env.FAL_API_KEY });
 
     console.log("Uploading images");
-    const uploadedModel = await fal.storage.upload(modelImage);
-    const uploadedGarment = await fal.storage.upload(clothImage);
-    console.log(`uploaded files ${uploadedModel} and ${uploadedGarment}`);
+    const uploadedUrls = await Promise.all(
+      imageFiles.map(async (file) => await fal.storage.upload(file))
+    );
+    console.log(`uploaded ${uploadedUrls.length} file(s)`);
 
     let final_prompt = system_prompt;
     if (userPrompt) {
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     const result = await fal.subscribe("fal-ai/bytedance/seedream/v4/edit", {
       input: {
         prompt: final_prompt,
-        image_urls: [uploadedModel, uploadedGarment],
+        image_urls: uploadedUrls,
       },
       logs: true,
       onQueueUpdate: (update) => {
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
     prisma.$disconnect()
     const message = err instanceof Error ? err.message : "Internal error"
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, message },
       { status: 500 }
     );
   }
